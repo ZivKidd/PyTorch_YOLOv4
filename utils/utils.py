@@ -913,7 +913,7 @@ def output_to_target(output, width, height):
                 cls = int(pred[5])
 
                 targets.append([i, cls, x, y, w, h, conf])
-
+    # targets的最后一列为该框的置信度
     return np.array(targets)
 
 
@@ -946,12 +946,12 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=None):
     color = color or [random.randint(0, 255) for _ in range(3)]
     c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
     cv2.rectangle(img, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA)
-    # if label:
-    #     tf = max(tl - 1, 1)  # font thickness
-    #     t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
-    #     c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
-    #     cv2.rectangle(img, c1, c2, color, -1, cv2.LINE_AA)  # filled
-        # cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
+    if label:
+        tf = max(tl - 1, 1)  # font thickness
+        t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
+        c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
+        cv2.rectangle(img, c1, c2, color, -1, cv2.LINE_AA)  # filled
+        cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
 
 
 def plot_wh_methods():  # from utils.utils import *; plot_wh_methods()
@@ -1027,6 +1027,7 @@ def plot_images(images, targets, paths=None, fname='images.jpg', names=None, max
             boxes = xywh2xyxy(image_targets[:, 2:6]).T
             classes = image_targets[:, 1].astype('int')
             gt = image_targets.shape[1] == 6  # ground truth if no conf column
+            # 这个conf就是置信度
             conf = None if gt else image_targets[:, 6]  # check for confidence presence (gt vs pred)
 
             boxes[[0, 2]] *= w
@@ -1037,9 +1038,17 @@ def plot_images(images, targets, paths=None, fname='images.jpg', names=None, max
                 cls = int(classes[j])
                 color = color_lut[cls % len(color_lut)]
                 cls = names[cls] if names else cls
-                if gt or conf[j] > 0.3:  # 0.3 conf thresh
-                    label = '%s' % cls if gt else '%s %.1f' % (cls, conf[j])
+                # 如果是真值
+                if gt :  # 0.3 conf thresh
+                    # label = '%s' % cls if gt else '%s %.1f' % (cls, conf[j])
+                    label = ''
                     plot_one_box(box, mosaic, label=label, color=color, line_thickness=tl)
+                # 如果是预测值
+                elif(conf[j]>0.3):
+                    # label = '%s' % cls if gt else '%s %.3f' % (cls, conf[j])
+                    label = '%.3f' % (conf[j])
+                    plot_one_box(box, mosaic, label=label, color=color, line_thickness=tl)
+
 
         # Draw image filename labels
         if paths is not None:

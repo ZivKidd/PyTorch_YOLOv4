@@ -8,8 +8,8 @@
 
 
 # train and val datasets (image directory or *.txt file with image paths)
-train: /media/sever/data1/xzr/subway/coco128/
-val: /media/sever/data1/xzr/subway/coco128/
+train: /media/sever/data1/xzr/subway/coco128/train/
+val: /media/sever/data1/xzr/subway/coco128/test/
 
 # number of classes
 nc: 80

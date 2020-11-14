@@ -344,7 +344,10 @@ def train(hyp, tb_writer, opt, device):
                                                      model=ema.ema.module if hasattr(ema.ema, 'module') else ema.ema,
                                                      single_cls=opt.single_cls,
                                                      dataloader=testloader,
-                                                     save_dir=log_dir)
+                                                     save_dir=log_dir,
+                                                     conf_thres=0.001,
+                                                     iou_thres=0.8,  # for NMS
+                                                     )
                     # Write
                     with open(results_file, 'a') as f:
                         f.write(s + '%10.4g' * 7 % results + '\n')  # P, R, mAP, F1, test_losses=(GIoU, obj, cls)
@@ -425,7 +428,7 @@ if __name__ == '__main__':
     parser.add_argument('--bucket', type=str, default='', help='gsutil bucket')
     parser.add_argument('--cache-images', action='store_true', help='cache images for faster training')
     parser.add_argument('--weights', type=str,
-                        default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp79/weights/last.pt',
+                        default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp86/weights/last.pt',
                         help='initial weights path')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
