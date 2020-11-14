@@ -336,33 +336,38 @@ def train(hyp, tb_writer, opt, device):
                 ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'gr', 'names', 'stride'])
             final_epoch = epoch + 1 == epochs
             if not opt.notest or final_epoch:  # Calculate mAP
-                results, maps, times = test.test(opt.data,
-                                                 batch_size=total_batch_size,
-                                                 imgsz=imgsz_test,
-                                                 save_json=final_epoch and opt.data.endswith(os.sep + 'coco.yaml'),
-                                                 model=ema.ema.module if hasattr(ema.ema, 'module') else ema.ema,
-                                                 single_cls=opt.single_cls,
-                                                 dataloader=testloader,
-                                                 save_dir=log_dir)
+                try:
+                    results, maps, times = test.test(opt.data,
+                                                     batch_size=total_batch_size,
+                                                     imgsz=imgsz_test,
+                                                     save_json=final_epoch and opt.data.endswith(os.sep + 'coco.yaml'),
+                                                     model=ema.ema.module if hasattr(ema.ema, 'module') else ema.ema,
+                                                     single_cls=opt.single_cls,
+                                                     dataloader=testloader,
+                                                     save_dir=log_dir)
+                    # Write
+                    with open(results_file, 'a') as f:
+                        f.write(s + '%10.4g' * 7 % results + '\n')  # P, R, mAP, F1, test_losses=(GIoU, obj, cls)
+                    if len(opt.name) and opt.bucket:
+                        os.system('gsutil cp %s gs://%s/results/results%s.txt' % (results_file, opt.bucket, opt.name))
 
-                # Write
-                with open(results_file, 'a') as f:
-                    f.write(s + '%10.4g' * 7 % results + '\n')  # P, R, mAP, F1, test_losses=(GIoU, obj, cls)
-                if len(opt.name) and opt.bucket:
-                    os.system('gsutil cp %s gs://%s/results/results%s.txt' % (results_file, opt.bucket, opt.name))
+                    # Tensorboard
+                    if tb_writer:
+                        tags = ['train/giou_loss', 'train/obj_loss', 'train/cls_loss',
+                                'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/mAP_0.5:0.95',
+                                'val/giou_loss', 'val/obj_loss', 'val/cls_loss']
+                        for x, tag in zip(list(mloss[:-1]) + list(results), tags):
+                            tb_writer.add_scalar(tag, x, epoch)
 
-                # Tensorboard
-                if tb_writer:
-                    tags = ['train/giou_loss', 'train/obj_loss', 'train/cls_loss',
-                            'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/mAP_0.5:0.95',
-                            'val/giou_loss', 'val/obj_loss', 'val/cls_loss']
-                    for x, tag in zip(list(mloss[:-1]) + list(results), tags):
-                        tb_writer.add_scalar(tag, x, epoch)
+                    # Update best mAP
+                    fi = fitness(np.array(results).reshape(1, -1))  # fitness_i = weighted combination of [P, R, mAP, F1]
+                    if fi > best_fitness:
+                        best_fitness = fi
+                except:
+                    pass
 
-                # Update best mAP
-                fi = fitness(np.array(results).reshape(1, -1))  # fitness_i = weighted combination of [P, R, mAP, F1]
-                if fi > best_fitness:
-                    best_fitness = fi
+            with open(results_file, 'a') as f:
+                f.write('')
 
             # Save model
             save = (not opt.nosave) or (final_epoch and not opt.evolve)
@@ -404,12 +409,12 @@ def train(hyp, tb_writer, opt, device):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='models/yolov4x-mish.yaml', help='model.yaml path')
+    parser.add_argument('--cfg', type=str, default='models/yolov4s-mish.yaml', help='model.yaml path')
     parser.add_argument('--data', type=str, default='data/coco128.yaml', help='data.yaml path')
     parser.add_argument('--hyp', type=str, default='', help='hyp.yaml path (optional)')
     parser.add_argument('--epochs', type=int, default=300)
-    parser.add_argument('--batch-size', type=int, default=1, help="Total batch size for all gpus.")
-    parser.add_argument('--img-size', nargs='+', type=int, default=[2560, 2560], help='train,test sizes')
+    parser.add_argument('--batch-size', type=int, default=4, help="Total batch size for all gpus.")
+    parser.add_argument('--img-size', nargs='+', type=int, default=[1920, 1920], help='train,test sizes')
     parser.add_argument('--rect', action='store_true', help='rectangular training')
     parser.add_argument('--resume', nargs='?', const='get_last', default=False,
                         help='resume from given path/to/last.pt, or most recent run if blank.')
@@ -419,9 +424,11 @@ if __name__ == '__main__':
     parser.add_argument('--evolve', action='store_true', help='evolve hyperparameters')
     parser.add_argument('--bucket', type=str, default='', help='gsutil bucket')
     parser.add_argument('--cache-images', action='store_true', help='cache images for faster training')
-    parser.add_argument('--weights', type=str, default='', help='initial weights path')
+    parser.add_argument('--weights', type=str,
+                        default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp79/weights/last.pt',
+                        help='initial weights path')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
-    parser.add_argument('--device', default='cpu', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--multi-scale', action='store_true', help='vary img-size +/- 50%%')
     parser.add_argument('--single-cls', action='store_true', help='train as single-class dataset')
     parser.add_argument('--sync-bn', action='store_true', help='use SyncBatchNorm, only available in DDP mode')

@@ -3,7 +3,7 @@ import json
 
 from models.experimental import *
 from utils.datasets import *
-
+import datetime
 
 def test(data,
          weights=None,
@@ -169,10 +169,10 @@ def test(data,
             stats.append((correct.cpu(), pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
 
         # Plot images
-        if batch_i < 1:
+        if batch_i < 3:
             f = Path(save_dir) / ('test_batch%g_gt.jpg' % batch_i)  # filename
             plot_images(img, targets, paths, str(f), names)  # ground truth
-            f = Path(save_dir) / ('test_batch%g_pred.jpg' % batch_i)
+            f = Path(save_dir) / (str(datetime.datetime.now())+'test_batch%g_pred.jpg' % batch_i)
             plot_images(img, output_to_target(output, width, height), paths, str(f), names)  # predictions
 
     # Compute statistics
@@ -233,13 +233,15 @@ def test(data,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='test.py')
-    parser.add_argument('--weights', nargs='+', type=str, default='weights/yolov4x-mish.pt', help='model.pt path(s)')
-    parser.add_argument('--data', type=str, default='data/coco.yaml', help='*.data path')
-    parser.add_argument('--batch-size', type=int, default=32, help='size of each image batch')
-    parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
+    parser.add_argument('--weights', nargs='+', type=str,
+                        default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp79/weights/last.pt',
+                        help='model.pt path(s)')
+    parser.add_argument('--data', type=str, default='data/coco128test.yaml', help='*.data path')
+    parser.add_argument('--batch-size', type=int, default=1, help='size of each image batch')
+    parser.add_argument('--img-size', type=int, default=1920, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.65, help='IOU threshold for NMS')
-    parser.add_argument('--save-json', action='store_true', help='save a cocoapi-compatible JSON results file')
+    parser.add_argument('--save-json',default=True, action='store_true', help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='test', help="'val', 'test', 'study'")
     parser.add_argument('--device', default='0', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--single-cls', action='store_true', help='treat as single-class dataset')
