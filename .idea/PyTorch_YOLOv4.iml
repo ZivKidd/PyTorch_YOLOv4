@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$" />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/utils" isTestSource="false" />
+    </content>
     <orderEntry type="jdk" jdkName="Remote Python 3.7.9 (sftp://sever@100.64.205.28:22/home/sever/anaconda3/envs/xzr_PyTorch_YOLOv4/bin/python3.7)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

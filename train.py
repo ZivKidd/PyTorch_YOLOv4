@@ -328,7 +328,7 @@ def train(hyp, tb_writer, opt, device):
 
         # Scheduler
         scheduler.step()
-
+        fi=0
         # Only the first process in DDP mode is allowed to log or save checkpoints.
         if rank in [-1, 0]:
             # mAP
@@ -345,7 +345,7 @@ def train(hyp, tb_writer, opt, device):
                                                      single_cls=opt.single_cls,
                                                      dataloader=testloader,
                                                      save_dir=log_dir,
-                                                     conf_thres=0.001,
+                                                     conf_thres=0.1,
                                                      iou_thres=0.8,  # for NMS
                                                      )
                     # Write
@@ -428,11 +428,12 @@ if __name__ == '__main__':
     parser.add_argument('--bucket', type=str, default='', help='gsutil bucket')
     parser.add_argument('--cache-images', action='store_true', help='cache images for faster training')
     parser.add_argument('--weights', type=str,
-                        default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp86/weights/last.pt',
+                        # default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp86/weights/last.pt',
+                        default='',
                         help='initial weights path')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--multi-scale', action='store_true', help='vary img-size +/- 50%%')
+    parser.add_argument('--multi-scale',action='store_true', help='vary img-size +/- 50%%')
     parser.add_argument('--single-cls', action='store_true', help='train as single-class dataset')
     parser.add_argument('--sync-bn', action='store_true', help='use SyncBatchNorm, only available in DDP mode')
     parser.add_argument('--local_rank', type=int, default=-1, help='DDP parameter, do not modify')
