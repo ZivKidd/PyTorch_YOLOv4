@@ -49,6 +49,7 @@ def exif_size(img):
 def create_dataloader(path, imgsz, batch_size, stride, opt, hyp=None, augment=False, cache=False, pad=0.0, rect=False, local_rank=-1, world_size=1):
     # Make sure only the first process in DDP process the dataset first, and the following others can use the cache.
     with torch_distributed_zero_first(local_rank):
+        # LoadImagesAndLabels是torch.utils.data.Dataset的子类,重载了__getitem__(self, index)和__len__(self)
         dataset = LoadImagesAndLabels(path, imgsz, batch_size,
                                     augment=augment,  # augment images
                                     hyp=hyp,  # augmentation hyperparameters
@@ -472,6 +473,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
     #     return self
 
     def __getitem__(self, index):
+        # 这里返回图片按是否self.mosaic，如果是的话，会读入四张拼成一张，不是的话就读入一张，按最长边缩放，没有的补灰度
         if self.image_weights:
             index = self.indices[index]
 
@@ -552,6 +554,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         if nL:
             labels_out[:, 1:] = torch.from_numpy(labels)
 
+        # cv2.imwrite('img.png',img)
         # Convert
         img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
         img = np.ascontiguousarray(img)
@@ -565,7 +568,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             l[:, 0] = i  # add target image index for build_targets()
         return torch.stack(img, 0), torch.cat(label, 0), path, shapes
 
-
+# 在这里读入图片png
 def load_image(self, index):
     # loads 1 image from dataset, returns img, original hw, resized hw
     img = self.imgs[index]
@@ -611,8 +614,9 @@ def load_mosaic(self, index):
     indices = [index] + [random.randint(0, len(self.labels) - 1) for _ in range(3)]  # 3 additional image indices
     for i, index in enumerate(indices):
         # Load image
+        # 这里读进来的还是1920,941,3,只是压缩了,没有扩到1920*1920
         img, _, (h, w) = load_image(self, index)
-
+        print(self.img_files[index])
         # place img in img4
         if i == 0:  # top left
             img4 = np.full((s * 2, s * 2, img.shape[2]), 114, dtype=np.uint8)  # base image with 4 tiles
@@ -659,7 +663,7 @@ def load_mosaic(self, index):
                                   scale=self.hyp['scale'],
                                   shear=self.hyp['shear'],
                                   border=self.mosaic_border)  # border to remove
-
+    cv2.imwrite('img4.png',img4)
     return img4, labels4
 
 

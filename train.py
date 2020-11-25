@@ -181,7 +181,8 @@ def train(hyp, tb_writer, opt, device):
         model = DDP(model, device_ids=[rank], output_device=rank)
 
     # Trainloader
-    dataloader, dataset = create_dataloader(train_path, imgsz, batch_size, gs, opt, hyp=hyp, augment=True,
+    # 创建对数据集的读取器
+    dataloader, dataset = create_dataloader(train_path, imgsz, batch_size, gs, opt, hyp=hyp, augment=False,
                                             cache=opt.cache_images, rect=opt.rect, local_rank=rank,
                                             world_size=opt.world_size)
     mlc = np.concatenate(dataset.labels, 0)[:, 0].max()  # max label class
@@ -337,6 +338,7 @@ def train(hyp, tb_writer, opt, device):
             final_epoch = epoch + 1 == epochs
             if not opt.notest or final_epoch:  # Calculate mAP
                 try:
+                    # 对val集进行测试
                     results, maps, times = test.test(opt.data,
                                                      batch_size=total_batch_size,
                                                      imgsz=imgsz_test,
@@ -347,6 +349,7 @@ def train(hyp, tb_writer, opt, device):
                                                      save_dir=log_dir,
                                                      conf_thres=0.1,
                                                      iou_thres=0.8,  # for NMS
+                                                     save_txt=True,
                                                      )
                     # Write
                     with open(results_file, 'a') as f:
