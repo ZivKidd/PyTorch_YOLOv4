@@ -9,8 +9,8 @@ import tqdm
 
 # train val test 按 4 1 2 分
 
-folder = r'/media/sever/data1/xzr/subway/positive'
-tag_files = glob.glob(folder + '/*.tag')
+folder = r"Z:\subway_scan\positive1130\augmentation"
+tag_files = glob.glob(folder + '/*.txt')
 random.shuffle(tag_files)
 
 train_folder=os.path.join(folder,'train')
@@ -22,7 +22,7 @@ for f in [train_folder,test_folder,val_folder]:
         os.mkdir(f)
 
 for ind,tag in enumerate(tqdm.tqdm(tag_files)):
-    tiff = tag[:-4] + '.tiff'
+    tiff = tag[:-4] + '.png'
     if(ind%7<4):
         shutil.copy(tag,os.path.join(train_folder,os.path.split(tag)[1]))
         shutil.copy(tiff,os.path.join(train_folder,os.path.split(tiff)[1]))
