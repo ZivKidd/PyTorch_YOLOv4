@@ -70,7 +70,8 @@ for png in tqdm.tqdm(pngs):
     coco128 = tag2txt(tag, shape=png1.shape, scale=4)
     if (coco128 is None):
         continue
-    for scale in [1, 1.5, 2]:
+    scale1 = np.around((np.random.rand(1, 1) * 2)[0, 0], decimals=2)+0.2
+    for scale in [0.5, 0.75, 1, 1.25, 1.5, 2, scale1]:
         image_path_new = os.path.join(folder_new, os.path.split(png)[1][:-4] + '_' + str(scale) + '.png')
         tag_path_new = os.path.join(folder_new, os.path.split(png)[1][:-4] + '_' + str(scale) + '.txt')
         if (scale == 1):
