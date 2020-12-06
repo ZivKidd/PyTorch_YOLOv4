@@ -171,10 +171,11 @@ def test(data,
 
         # Plot images
         if batch_i %30==0:
-            f = Path(save_dir) / ('test_result/test_batch%g_gt.jpg' % batch_i)  # filename
-            plot_images(img, targets, paths, str(f), names)  # ground truth
+            # f1 = Path(save_dir) / ('test_result/test_batch%g_gt.jpg' % batch_i)  # filename
+            # plot_images(img, targets, paths, str(f), names)  # ground truth
             f = Path(save_dir) / ('test_result/'+str(datetime.datetime.now())+'test_batch%g_pred.jpg' % batch_i)
-            plot_images(img, output_to_target(output, width, height), paths, str(f), names)  # predictions
+            # plot_images(img, output_to_target(output, width, height), paths, str(f), names)  # predictions
+            plot_gt_pre(img, targets,output_to_target(output, width, height), paths, str(f), names)  # predictions
 
     # Compute statistics
     stats = [np.concatenate(x, 0) for x in zip(*stats)]  # to numpy
@@ -235,11 +236,11 @@ def test(data,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='test.py')
     parser.add_argument('--weights', nargs='+', type=str,
-                        default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp141/weights/best.pt',
+                        default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp144/weights/best.pt',
                         help='model.pt path(s)')
     parser.add_argument('--data', type=str, default='data/coco128test.yaml', help='*.data path')
     parser.add_argument('--batch-size', type=int, default=1, help='size of each image batch')
-    parser.add_argument('--img-size', type=int, default=2100, help='inference size (pixels)')
+    parser.add_argument('--img-size', type=int, default=2000, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.65, help='IOU threshold for NMS')
     parser.add_argument('--save-json',default=True, action='store_true', help='save a cocoapi-compatible JSON results file')

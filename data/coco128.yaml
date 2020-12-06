@@ -8,8 +8,8 @@
 
 
 # train and val datasets (image directory or *.txt file with image paths)
-train: /media/sever/data1/xzr/subway/split/train/
-val: /media/sever/data1/xzr/subway/split/val/
+train: /media/sever/data1/xzr/subway/split1203/train/
+val: /media/sever/data1/xzr/subway/split1203/val/
 
 # number of classes
 nc: 1

@@ -420,7 +420,7 @@ if __name__ == '__main__':
     parser.add_argument('--hyp', type=str, default='', help='hyp.yaml path (optional)')
     parser.add_argument('--epochs', type=int, default=300)
     parser.add_argument('--batch-size', type=int, default=3, help="Total batch size for all gpus.")
-    parser.add_argument('--img-size', nargs='+', type=int, default=[2100, 2100], help='train,test sizes')
+    parser.add_argument('--img-size', nargs='+', type=int, default=[2000, 2000], help='train,test sizes')
     parser.add_argument('--rect', action='store_true', help='rectangular training')
     parser.add_argument('--resume', nargs='?', const='get_last', default=False,
                         help='resume from given path/to/last.pt, or most recent run if blank.')
@@ -431,8 +431,8 @@ if __name__ == '__main__':
     parser.add_argument('--bucket', type=str, default='', help='gsutil bucket')
     parser.add_argument('--cache-images', action='store_true', help='cache images for faster training')
     parser.add_argument('--weights', type=str,
-                        default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp139/weights/best.pt',
-                        # default='',
+                        # default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp139/weights/best.pt',
+                        default='',
                         help='initial weights path')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
     parser.add_argument('--device', default='0,1,3', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
