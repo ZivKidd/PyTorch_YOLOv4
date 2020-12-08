@@ -95,7 +95,9 @@ def test(data,
 
             # Run NMS
             t = torch_utils.time_synchronized()
+            inf_out1=inf_out.cpu().numpy()
             output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=iou_thres, merge=merge)
+            output1=output[0].cpu().numpy()
             t1 += torch_utils.time_synchronized() - t
 
         # Statistics per image
@@ -173,7 +175,7 @@ def test(data,
         if batch_i %30==0:
             # f1 = Path(save_dir) / ('test_result/test_batch%g_gt.jpg' % batch_i)  # filename
             # plot_images(img, targets, paths, str(f), names)  # ground truth
-            f = Path(save_dir) / ('test_result/'+str(datetime.datetime.now())+'test_batch%g_pred.jpg' % batch_i)
+            f = Path(save_dir) / ('test_result/'+os.path.split(paths[0])[1])
             # plot_images(img, output_to_target(output, width, height), paths, str(f), names)  # predictions
             plot_gt_pre(img, targets,output_to_target(output, width, height), paths, str(f), names)  # predictions
 
@@ -236,7 +238,7 @@ def test(data,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='test.py')
     parser.add_argument('--weights', nargs='+', type=str,
-                        default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp144/weights/best.pt',
+                        default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp148/weights/last.pt',
                         help='model.pt path(s)')
     parser.add_argument('--data', type=str, default='data/coco128test.yaml', help='*.data path')
     parser.add_argument('--batch-size', type=int, default=1, help='size of each image batch')
@@ -245,7 +247,7 @@ if __name__ == '__main__':
     parser.add_argument('--iou-thres', type=float, default=0.65, help='IOU threshold for NMS')
     parser.add_argument('--save-json',default=True, action='store_true', help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='test', help="'val', 'test', 'study'")
-    parser.add_argument('--device', default='0', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+    parser.add_argument('--device', default='3', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--single-cls', action='store_true', help='treat as single-class dataset')
     parser.add_argument('--augment', action='store_true', help='augmented inference')
     parser.add_argument('--merge', action='store_true', help='use Merge NMS')

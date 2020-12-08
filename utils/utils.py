@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import time
 from contextlib import contextmanager
-from copy import copy
+from copy import copy,deepcopy
 from pathlib import Path
 from sys import platform
 
@@ -20,6 +20,7 @@ import torchvision
 import yaml
 from scipy.signal import butter, filtfilt
 from tqdm import tqdm
+from scipy.spatial import cKDTree
 
 from . import torch_utils  # , google_utils
 
@@ -897,8 +898,8 @@ def fitness(x):
 
 def output_to_target(output, width, height):
     # Convert model output to target format [batch_id, class_id, x, y, w, h, conf]
-    if isinstance(output, torch.Tensor):
-        output = output.cpu().numpy()
+    # if isinstance(output, torch.Tensor):
+    output[0] = output[0].cpu().numpy()
 
     targets = []
     for i, o in enumerate(output):
@@ -949,10 +950,10 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=None):
     cv2.rectangle(img, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA)
     if label:
         tf = max(tl - 1, 1)  # font thickness
-        t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
+        t_size = cv2.getTextSize(label, 0, fontScale=tl / 6, thickness=tf)[0]
         c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
         cv2.rectangle(img, c1, c2, color, -1, cv2.LINE_AA)  # filled
-        cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
+        cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 6, [225, 255, 255], thickness=1, lineType=cv2.LINE_AA)
 
 def plot_wh_methods():  # from utils.utils import *; plot_wh_methods()
     # Compares the two methods for width-height anchor multiplication
@@ -1014,6 +1015,8 @@ def plot_gt_pre(images, targets_gt,targets_pre ,paths=None, fname='images.jpg',
     color_lut = [hex2rgb(h) for h in prop_cycle.by_key()['color']]
 
     for i, img in enumerate(images):
+        box_gt=0
+        box_pre=0
         if i == max_subplots:  # if last batch has fewer images than we expect
             break
 
@@ -1037,6 +1040,7 @@ def plot_gt_pre(images, targets_gt,targets_pre ,paths=None, fname='images.jpg',
             boxes[[0, 2]] += block_x
             boxes[[1, 3]] *= h
             boxes[[1, 3]] += block_y
+            box_gt=deepcopy(boxes)
             for j, box in enumerate(boxes.T):
                 cls = int(classes[j])
                 # color = color_lut[cls % len(color_lut)]
@@ -1053,6 +1057,9 @@ def plot_gt_pre(images, targets_gt,targets_pre ,paths=None, fname='images.jpg',
                 #     # label = '%s' % cls if gt else '%s %.3f' % (cls, conf[j])
                 #     label = '%.3f' % (conf[j])
                 #     plot_one_box(box, mosaic, label=label, color=color, line_thickness=tl)
+        center_gt = np.concatenate([(box_gt[0:1, :] + box_gt[2:3, :]) / 2, (box_gt[1:2, :] + box_gt[3:4, :]) / 2],
+                                   axis=0).T
+        kdtree = cKDTree(center_gt)
         if len(targets_pre) > 0:
             image_targets = targets_pre[targets_pre[:, 0] == i]
             boxes = xywh2xyxy(image_targets[:, 2:6]).T
@@ -1065,6 +1072,10 @@ def plot_gt_pre(images, targets_gt,targets_pre ,paths=None, fname='images.jpg',
             boxes[[0, 2]] += block_x
             boxes[[1, 3]] *= h
             boxes[[1, 3]] += block_y
+            box_pre=deepcopy(boxes)
+            center_pre = np.concatenate(
+                [(box_pre[0:1, :] + box_pre[2:3, :]) / 2, (box_pre[1:2, :] + box_pre[3:4, :]) / 2], axis=0).T
+            dists, inds = kdtree.query(center_pre)
             for j, box in enumerate(boxes.T):
                 cls = int(classes[j])
                 # color = color_lut[cls % len(color_lut)]
@@ -1076,13 +1087,24 @@ def plot_gt_pre(images, targets_gt,targets_pre ,paths=None, fname='images.jpg',
                 #     # label = '%s' % cls if gt else '%s %.1f' % (cls, conf[j])
                 # 设置0.3为框的阈值
                 if (conf[j] > 0.3):
-                    label = '%.3f' % (conf[j])
+                    label = str(np.around(conf[j],decimals=2))+'-'+str(np.around(dists[j],decimals=2))
                     plot_one_box(box, mosaic, label=label, color=color, line_thickness=tl)
                 # # 如果是预测值
 
                 #     # label = '%s' % cls if gt else '%s %.3f' % (cls, conf[j])
                 #     label = '%.3f' % (conf[j])
                 #     plot_one_box(box, mosaic, label=label, color=color, line_thickness=tl)
+
+        # pass
+
+        # # 判断中心点偏差
+        # if len(targets_pre) > 0 and len(targets_gt)>0:
+        #     center_gt=np.concatenate([(box_gt[0:1,:]+box_gt[2:3,:])/2,(box_gt[1:2,:]+box_gt[3:4,:])/2],axis=0).T
+        #     center_pre=np.concatenate([(box_pre[0:1,:]+box_pre[2:3,:])/2,(box_pre[1:2,:]+box_pre[3:4,:])/2],axis=0).T
+        #     kdtree = cKDTree(center_gt)
+        #     dists, inds = kdtree.query(center_pre)
+        #     # result = (dists == 0).sum()
+        #     print()
 
         # Draw image filename labels
         if paths is not None:
@@ -1095,7 +1117,7 @@ def plot_gt_pre(images, targets_gt,targets_pre ,paths=None, fname='images.jpg',
         cv2.rectangle(mosaic, (block_x, block_y), (block_x + w, block_y + h), (255, 255, 255), thickness=3)
 
     if fname is not None:
-        mosaic = cv2.resize(mosaic, (int(ns * w * 0.5), int(ns * h * 0.5)), interpolation=cv2.INTER_AREA)
+        # mosaic = cv2.resize(mosaic, (int(ns * w * 0.5), int(ns * h * 0.5)), interpolation=cv2.INTER_AREA)
         cv2.imwrite(fname, cv2.cvtColor(mosaic, cv2.COLOR_BGR2RGB))
 
     return mosaic
