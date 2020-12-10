@@ -80,8 +80,8 @@ for png in tqdm.tqdm(pngs):
     coco128 = tag2txt(tag, shape=png1.shape, scale=1)
     if (coco128 is None):
         continue
-    scale1 = np.around(np.around((np.random.rand(1, 1) * 2)[0, 0], decimals=2)+0.2,decimals=2)
-    scale_list=[0.5, 0.75, 1, 1.25, 1.5, scale1]
+    scale1 = np.around(np.around((np.random.rand(1, 1))[0, 0], decimals=2)+0.2,decimals=2)
+    scale_list=[0.5, 0.75, 1, scale1]
     random.shuffle(scale_list)
     for scale in scale_list:
         num+=1
