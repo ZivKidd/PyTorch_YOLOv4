@@ -59,8 +59,8 @@ def tag2txt(tag, shape, scale, bbox_size=200):
     return coco128
 
 scale_ori=4
-folder = r"Z:\subway_scan\positive1130\synthesis\*.png"
-folder_new = r"Z:\subway_scan\positive1130\augmentation"
+folder = r"Z:\subway_scan\positive1130\origin\*.tiff"
+folder_new = r"Z:\subway_scan\positive1130\nodepth"
 train_folder=os.path.join(folder_new,'train')
 val_folder=os.path.join(folder_new,'val')
 test_folder=os.path.join(folder_new,'test')
@@ -72,7 +72,7 @@ pngs.sort()
 num=0
 # scale = 4
 for png in tqdm.tqdm(pngs):
-    tag = os.path.join(os.path.split(png)[0], os.path.split(png)[1][:-4] + '.tag')
+    tag = os.path.join(os.path.split(png)[0], os.path.split(png)[1][:-5] + '.tag')
     # jpg = os.path.join(os.path.split(png)[0], os.path.split(png)[1][:-5] + '.jpg')
     # jpg = cv2.imread(jpg)
     png1 = cv2.imread(png)
@@ -86,14 +86,14 @@ for png in tqdm.tqdm(pngs):
     for scale in scale_list:
         num+=1
         if (num % 7 < 4):
-            image_path_new = os.path.join(train_folder, os.path.split(png)[1][:-4] + '_' + str(scale) + '.png')
-            tag_path_new = os.path.join(train_folder, os.path.split(png)[1][:-4] + '_' + str(scale) + '.txt')
+            image_path_new = os.path.join(train_folder, os.path.split(png)[1][:-5] + '_' + str(scale) + '.png')
+            tag_path_new = os.path.join(train_folder, os.path.split(png)[1][:-5] + '_' + str(scale) + '.txt')
         elif (num % 7 == 4):
-            image_path_new = os.path.join(val_folder, os.path.split(png)[1][:-4] + '_' + str(scale) + '.png')
-            tag_path_new = os.path.join(val_folder, os.path.split(png)[1][:-4] + '_' + str(scale) + '.txt')
+            image_path_new = os.path.join(val_folder, os.path.split(png)[1][:-5] + '_' + str(scale) + '.png')
+            tag_path_new = os.path.join(val_folder, os.path.split(png)[1][:-5] + '_' + str(scale) + '.txt')
         else:
-            image_path_new = os.path.join(test_folder, os.path.split(png)[1][:-4] + '_' + str(scale) + '.png')
-            tag_path_new = os.path.join(test_folder, os.path.split(png)[1][:-4] + '_' + str(scale) + '.txt')
+            image_path_new = os.path.join(test_folder, os.path.split(png)[1][:-5] + '_' + str(scale) + '.png')
+            tag_path_new = os.path.join(test_folder, os.path.split(png)[1][:-5] + '_' + str(scale) + '.txt')
 
         if (scale == 1):
             png2 = cv2.resize(png1, (int(png1.shape[1]/scale_ori), int(png1.shape[0]/scale_ori)), interpolation=cv2.INTER_AREA)

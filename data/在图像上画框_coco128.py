@@ -4,7 +4,7 @@ import os
 import numpy as np
 import cv2
 import tqdm
-png=r"Z:\subway_scan\positive1130\augmentation\000001_2.png"
+png=r"Z:\subway_scan\positive1130\augmentation\000001_0.5.png"
 coco=png[:-4]+'.txt'
 coco=np.loadtxt(coco).tolist()
 # bbox_size = 200
@@ -19,4 +19,4 @@ for b in coco:
     png = cv2.circle(png, (int(b[1] *width), int(b[2] *height)), 3, (0, 0, 255))
     # print()
 
-cv2.imwrite('rect.tiff', png)
+cv2.imwrite('rect.png', png)
