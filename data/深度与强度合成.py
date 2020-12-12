@@ -5,8 +5,8 @@ import shutil
 import numpy as np
 import cv2
 
-folder = r"Z:\subway_scan\positive1130\origin\*.tiff"
-folder_new=r"Z:\subway_scan\positive1130\synthesis"
+folder = r"Z:\subway_scan\guangzhou\origin\*.tiff"
+folder_new=r"Z:\subway_scan\guangzhou\synthesis"
 tiffs = glob.glob(folder)
 # scale=1
 for tiff in tqdm.tqdm(tiffs):

@@ -59,8 +59,8 @@ def tag2txt(tag, shape, scale, bbox_size=200):
     return coco128
 
 scale_ori=4
-folder = r"Z:\subway_scan\positive1130\synthesis\*.png"
-folder_new = r"Z:\subway_scan\positive1130\augmentation"
+folder = r"Z:\subway_scan\guangzhou\synthesis\*.png"
+folder_new = r"Z:\subway_scan\guangzhou\augmentation"
 train_folder=os.path.join(folder_new,'train')
 val_folder=os.path.join(folder_new,'val')
 test_folder=os.path.join(folder_new,'test')
