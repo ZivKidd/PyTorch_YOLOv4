@@ -7,9 +7,61 @@ import sys
 import cv2
 import numpy as np
 from onnxruntime import InferenceSession
-
+import glob
+import json
+from scipy.spatial import cKDTree
+import tqdm
 
 # print(datetime.datetime.now())
+
+def tag2txt(tag):
+    coco128 = []
+
+    f = open(tag, encoding='utf-8')
+    text = f.read()
+    text = text.split('\n')
+
+    # tiff = tag[:-4] + '.png'
+    # tiff = cv2.imread(tiff)
+    # tiff = tiff[:, :, :1]
+
+    for t in text:
+        if (t == ''):
+            continue
+        data = json.loads(t)
+        col = data['ColIndex']
+        row = -1
+        for s in data['SegmentInfos']:
+            if (s is None):
+                # print(tag)
+                continue
+            if (s['Name'] == 'FB'):
+                row = s['RowIndex']
+            elif (s['Name'] == 'KP'):
+                row = s['RowIndex']
+        if (row == -1):
+            continue
+        # cols.append(col)
+        # rows.append(row)
+        # row = row / (shape[0] * scale)
+        # col = col / (shape[1] * scale)
+
+        # class x_center y_center width height
+        coco128.append([col, row])
+
+    if (len(coco128) < 1):
+        print(tag)
+        return None
+
+    # easydl_json = json.dumps(easydl_json)
+    # f = open(os.path.join(r"Z:\subway_scan\coco128",str(ind).zfill(6)+'.txt'), 'w')
+    # f.write(easydl_json)
+    # f.close()
+
+    # fmt = '%d', '%6f', '%6f', '%6f', '%6f'
+    coco128 = np.asarray(coco128)
+    return coco128
+
 
 def nms(dets, conf_thres=0.001, iou_thres=0.65):
     dets = dets.reshape((dets.shape[1], 6))
@@ -111,77 +163,86 @@ class ONNXModel():
 
 if __name__ == '__main__':
     # onnx_path=sys.argv[1]
-    intensity_img_path = sys.argv[1]
-    histogram_optimization = sys.argv[2]
-    depth_img_path = sys.argv[3]
-    output_png = sys.argv[4]
-    # if(histogram_optimization=='histogram_optimization_yes'):
-    #     histogram_optimization=True
-    # else:
-    #     histogram_optimization=False
-    # print(img_path)
-    # print(sys.argv)
-    # onnx_model = ONNXModel(os.path.join(os.path.split(sys.argv[0])[0],'test.onnx'))
-    onnx_model = ONNXModel(r'D:\desktop\files\shine\地铁环缝检测\onnx测试\test.onnx')
-    # 防止不能读入中文路径的图片
-    intensity_img = cv2.imdecode(np.fromfile(intensity_img_path, dtype=np.uint8), -1)
-    depth_img = cv2.imdecode(np.fromfile(depth_img_path, dtype=np.uint8), -1)
+    tiffs = glob.glob(r"Z:\subway_scan\guangzhou\origin\*.tiff")
+    onnx_model = ONNXModel(r"C:\Users\12037\Desktop\files\PyTorch_YOLOv4\onnx_convert\test.onnx")
 
-    # 强度图直方图均衡化
-    if (histogram_optimization == 'histogram_optimization_yes'):
+    distances=[]
+    alls=0
+    goods=0
+    leaks=0
+    wrongs=0
+    alls_detect=0
+
+    for tiff in tqdm.tqdm(tiffs):
+        tag = os.path.join(os.path.split(tiff)[0], os.path.split(tiff)[1][:-5] + '.tag')
+        jpg = os.path.join(os.path.split(tiff)[0], os.path.split(tiff)[1][:-5] + '.jpg')
+
+        intensity_img = cv2.imdecode(np.fromfile(tiff, dtype=np.uint8), -1)
+        depth_img = cv2.imdecode(np.fromfile(jpg, dtype=np.uint8), -1)
+
+        # 强度图直方图均衡化
+        # if (histogram_optimization == 'histogram_optimization_yes'):
         intensity_img = cv2.equalizeHist(intensity_img)
 
-    img = np.zeros((intensity_img.shape[0], intensity_img.shape[1], 3))
-    img[:, :, 0] = depth_img[:, :, 0]
-    img[:, :, 1] = depth_img[:, :, 0]
-    img[:, :, 2] = intensity_img
+        img = np.zeros((intensity_img.shape[0], intensity_img.shape[1], 3))
+        img[:, :, 0] = depth_img[:, :, 0]
+        img[:, :, 1] = depth_img[:, :, 0]
+        img[:, :, 2] = intensity_img
 
-    input_size = 2016
-    scale = input_size / np.max(img.shape)
+        input_size = 2016
+        scale = input_size / np.max(img.shape)
 
-    img_new = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
-    # img = cv2.resize(img, (2016, 2016))
-    # img_new = np.zeros([1, 3, input_size, input_size])
-    # img_new[:,:,:,:]=100
-    # img=img[np.newaxis,:,:,:]
-    color = (114, 114, 114)
-    top, bottom = int(round((input_size - int(img.shape[0] * scale)) / 2 - 0.1)), int(
-        round((input_size - int(img.shape[0] * scale)) / 2 + 0.1))
-    left, right = int(round((input_size - int(img.shape[1] * scale)) / 2 - 0.1)), int(
-        round((input_size - int(img.shape[1] * scale)) / 2 + 0.1))
-    img_new = cv2.copyMakeBorder(img_new, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
-    img_output = img_new.copy()
-    # img_new[0, 0, :, :] = img[:, :, 0]
-    # img_new[0, 1, :, :] = img[:, :, 1]
-    # img_new[0, 2, :, :] = img[:, :, 2]
-    img_new = img_new / 255.0
-    img_new = np.asarray(img_new, dtype=np.float32)
-    img_new = img_new.transpose((2, 0, 1))
-    img_new_reshape = np.reshape(img_new, [1, 3, input_size, input_size])
-    result = onnx_model.forward(img_new_reshape)
-    nms_result = nms(result[0], conf_thres=0.5)
-    center = nms_result[:, :2]
-    center[:, 0] -= left
-    center[:, 1] -= top
-    center /= scale
-    center = center[center[:, 0].argsort()]
-    np.savetxt(os.path.join(os.path.split(sys.argv[1])[0], 'corner_center.txt'), center, fmt='%.03f')
-    # print()
-    # nms_result*=scale
-    if (output_png == 'output_png_yes'):
-        x1 = np.asarray(nms_result[:, 0] - nms_result[:, 2] / 2, dtype=np.int)
-        y1 = np.asarray(nms_result[:, 1] - nms_result[:, 3] / 2, dtype=np.int)
-        x2 = np.asarray(nms_result[:, 0] + nms_result[:, 2] / 2, dtype=np.int)
-        y2 = np.asarray(nms_result[:, 1] + nms_result[:, 3] / 2, dtype=np.int)
-        for i in range(x1.shape[0]):
-            # if(x2[i]>input_size or y2[i]>input_size):
-            #     continue
-            img = cv2.rectangle(img=img,
-                                pt1=(x1[i], y1[i]),
-                                pt2=(x2[i], y2[i]),
-                                color=(0, 0, 255),
-                                thickness=3)
-        cv2.imencode('.png', img)[1].tofile(os.path.join(os.path.split(sys.argv[1])[0], 'onnx.png'))
-        # cv2.imwrite('onnx.png',img_output)
+        img_new = cv2.resize(img, (int(img.shape[1] * scale), int(img.shape[0] * scale)))
+        # img = cv2.resize(img, (2016, 2016))
+        # img_new = np.zeros([1, 3, input_size, input_size])
+        # img_new[:,:,:,:]=100
+        # img=img[np.newaxis,:,:,:]
+        color = (114, 114, 114)
+        top, bottom = int(round((input_size - int(img.shape[0] * scale)) / 2 - 0.1)), int(
+            round((input_size - int(img.shape[0] * scale)) / 2 + 0.1))
+        left, right = int(round((input_size - int(img.shape[1] * scale)) / 2 - 0.1)), int(
+            round((input_size - int(img.shape[1] * scale)) / 2 + 0.1))
+        img_new = cv2.copyMakeBorder(img_new, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
+        img_output = img_new.copy()
+        # img_new[0, 0, :, :] = img[:, :, 0]
+        # img_new[0, 1, :, :] = img[:, :, 1]
+        # img_new[0, 2, :, :] = img[:, :, 2]
+        img_new = img_new / 255.0
+        img_new = np.asarray(img_new, dtype=np.float32)
+        img_new = img_new.transpose((2, 0, 1))
+        img_new_reshape = np.reshape(img_new, [1, 3, input_size, input_size])
+        result = onnx_model.forward(img_new_reshape)
+        nms_result = nms(result[0], conf_thres=0.5)
+        center = nms_result[:, :2]
+        center[:, 0] -= left
+        center[:, 1] -= top
+        center /= scale
+        # 预测的中心点
+        center = center[center[:, 0].argsort()]
+        # 实际中心点
+        coco128 = tag2txt(tag)
 
-        # print(datetime.datetime.now())
+
+        kdtree = cKDTree(coco128)
+        # 每个预测的点到最近的真实点的距离
+        dists, inds = kdtree.query(center)
+        good=np.where(dists<30)
+        distance = dists[good]
+        good=len(good[0])
+        all=coco128.shape[0]
+        leak=all-good
+        wrong=dists.shape[0]-good
+
+        distances.extend(distance.tolist())
+        # 所有对的
+        alls+=all
+        # 检测对的
+        goods+=good
+        # 错检的
+        wrongs+=wrong
+        # 漏检的
+        leaks+=leak
+        # 所有检出的
+        alls_detect+=dists.shape[0]
+
+        print(np.mean(distances),'所有对的',alls,'检测对的',goods,'错检的',wrongs,'漏检的',leaks,'所有检出的',alls_detect)
