@@ -1,7 +1,7 @@
 import torch
 device = torch.device("cpu")
 
-model = torch.load(r'/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp148/weights/last.pt') # pytorch模型加载
+model = torch.load(r'/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp182_newdepth_yasuo/weights/best.pt') # pytorch模型加载
 batch_size = 1  #批处理大小
 input_shape = (3, 2016, 2016)   #输入数据,改成自己的输入shape
 model=model['model']
