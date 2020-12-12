@@ -3,11 +3,9 @@
 import cv2
 import numpy as np
 from onnxruntime import InferenceSession
-# import datetime
-import sys
-import os
+import datetime
 
-# print(datetime.datetime.now())
+print(datetime.datetime.now())
 
 def nms(dets, conf_thres=0.001, iou_thres=0.65):
     dets = dets.reshape((dets.shape[1], 6))
@@ -54,8 +52,8 @@ class ONNXModel():
         self.onnx_session = InferenceSession(onnx_path)
         self.input_name = self.get_input_name(self.onnx_session)
         self.output_name = self.get_output_name(self.onnx_session)
-        # print("input_name:{}".format(self.input_name))
-        # print("output_name:{}".format(self.output_name))
+        print("input_name:{}".format(self.input_name))
+        print("output_name:{}".format(self.output_name))
 
     def get_output_name(self, onnx_session):
         """
@@ -106,54 +104,44 @@ class ONNXModel():
         result = self.onnx_session.run(self.output_name, input_feed=input_feed)
         return result
 
-if __name__=='__main__':
-    img_path=sys.argv[1]
-    # print(img_path)
-    # print(sys.argv)
-    onnx_model = ONNXModel(os.path.join(os.path.split(sys.argv[0])[0],'test.onnx'))
-    # 防止不能读入中文路径的图片
-    img = cv2.imdecode(np.fromfile(img_path,dtype=np.uint8),-1)
-    input_size=2016
-    # 把最长的边缩到目标尺寸
-    scale=input_size/np.max(img.shape)
-    img_new=cv2.resize(img, (int(img.shape[1]*scale), int(img.shape[0]*scale)))
 
-    # 把不足的地方填补灰色
-    color=(114,114,114)
-    top,bottom=int(round((input_size-int(img.shape[0]*scale))/2 - 0.1)), int(round((input_size-int(img.shape[0]*scale))/2 + 0.1))
-    left,right=int(round((input_size-int(img.shape[1]*scale))/2 - 0.1)), int(round((input_size-int(img.shape[1]*scale))/2 + 0.1))
-    img_new = cv2.copyMakeBorder(img_new, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
-    img_output=img_new.copy()
-    img_new = img_new / 255.0
-    img_new = np.asarray(img_new, dtype=np.float32)
-    img_new=img_new.transpose((2,0,1))
-    img_new_reshape=np.reshape(img_new,[1,3,input_size,input_size])
+onnx_model = ONNXModel('test.onnx')
+img = cv2.imread('img.png')
+input_size=2016
+scale=input_size/np.max(img.shape)
 
-    # 模型预测
-    result = onnx_model.forward(img_new_reshape)
-    nms_result = nms(result[0])
+img_new=cv2.resize(img, (int(img.shape[1]*scale), int(img.shape[0]*scale)))
+# img = cv2.resize(img, (2016, 2016))
+# img_new = np.zeros([1, 3, input_size, input_size])
+# img_new[:,:,:,:]=100
+# img=img[np.newaxis,:,:,:]
+color=(114,114,114)
+top,bottom=int(round((input_size-int(img.shape[0]*scale))/2 - 0.1)), int(round((input_size-int(img.shape[0]*scale))/2 + 0.1))
+left,right=int(round((input_size-int(img.shape[1]*scale))/2 - 0.1)), int(round((input_size-int(img.shape[1]*scale))/2 + 0.1))
+img_new = cv2.copyMakeBorder(img_new, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
+img_output=img_new.copy()
+# img_new[0, 0, :, :] = img[:, :, 0]
+# img_new[0, 1, :, :] = img[:, :, 1]
+# img_new[0, 2, :, :] = img[:, :, 2]
+img_new = img_new / 255.0
+img_new = np.asarray(img_new, dtype=np.float32)
+img_new=img_new.transpose((2,0,1))
+img_new_reshape=np.reshape(img_new,[1,3,input_size,input_size])
+result = onnx_model.forward(img_new_reshape)
+nms_result = nms(result[0])
+x1 = np.asarray(nms_result[:, 0] - nms_result[:, 2] / 2,dtype=np.int)
+y1 = np.asarray(nms_result[:, 1] - nms_result[:, 3] / 2,dtype=np.int)
+x2 = np.asarray(nms_result[:, 0] + nms_result[:, 2] / 2,dtype=np.int)
+y2 = np.asarray(nms_result[:, 1] + nms_result[:, 3] / 2,dtype=np.int)
+for i in range(x1.shape[0]):
+    if(x2[i]>input_size or y2[i]>input_size):
+        continue
+    img_output = cv2.rectangle(img=img_output,
+                        pt1=(x1[i], y1[i]),
+                        pt2=(x2[i], y2[i]),
+                        color=(0, 255, 0),
+                        thickness=3)
+cv2.imwrite('onnx.png',img_output)
 
-    # 保存框的中心点
-    center=nms_result[:,:2]
-    center[:,0]-=left
-    center[:,1]-=top
-    center/=scale
-    center = center[center[:,0].argsort()]
-    np.savetxt(os.path.join(os.path.split(sys.argv[1])[0],'corner_center.txt'),center,fmt='%.03f')
-    # print()
-    # x1 = np.asarray(nms_result[:, 0] - nms_result[:, 2] / 2,dtype=np.int)
-    # y1 = np.asarray(nms_result[:, 1] - nms_result[:, 3] / 2,dtype=np.int)
-    # x2 = np.asarray(nms_result[:, 0] + nms_result[:, 2] / 2,dtype=np.int)
-    # y2 = np.asarray(nms_result[:, 1] + nms_result[:, 3] / 2,dtype=np.int)
-    # for i in range(x1.shape[0]):
-    #     if(x2[i]>input_size or y2[i]>input_size):
-    #         continue
-    #     img_output = cv2.rectangle(img=img_output,
-    #                         pt1=(x1[i], y1[i]),
-    #                         pt2=(x2[i], y2[i]),
-    #                         color=(0, 255, 0),
-    #                         thickness=3)
-    # cv2.imwrite('onnx.png',img_output)
-
-    # print(datetime.datetime.now())
+print(datetime.datetime.now())
 

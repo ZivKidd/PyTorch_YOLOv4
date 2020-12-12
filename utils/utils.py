@@ -88,13 +88,18 @@ def check_anchors(dataset, model, thr=4.0, imgsz=640):
         return (best > 1. / thr).float().mean()  #  best possible recall
 
     bpr = metric(m.anchor_grid.clone().cpu().view(-1, 2))
+    bpr=0
     print('Best Possible Recall (BPR) = %.4f' % bpr, end='')
     if bpr < 0.99:  # threshold to recompute
-        print('. Attempting to generate improved anchors, please wait...' % bpr)
+        print(bpr)
+        # print('. Attempting to generate improved anchors, please wait...' % bpr)
         na = m.anchor_grid.numel() // 2  # number of anchors
         new_anchors = kmean_anchors(dataset, n=na, img_size=imgsz, thr=thr, gen=1000, verbose=False)
+        new_anchors1=np.ones([9-new_anchors.shape[0],9-new_anchors.shape[0]])*np.mean(new_anchors)
+        new_anchors=np.concatenate([new_anchors,new_anchors1],axis=0)
         new_bpr = metric(new_anchors.reshape(-1, 2))
         if new_bpr > bpr:  # replace anchors
+            print(new_bpr.cpu().numpy())
             new_anchors = torch.tensor(new_anchors, device=m.anchors.device).type_as(m.anchors)
             m.anchor_grid[:] = new_anchors.clone().view_as(m.anchor_grid)  # for inference
             m.anchors[:] = new_anchors.clone().view_as(m.anchors) / m.stride.to(m.anchors.device).view(-1, 1, 1)  # loss
@@ -797,9 +802,9 @@ def kmean_anchors(path='./data/coco128.yaml', n=9, img_size=640, thr=4.0, gen=10
     # Kmeans calculation
     from scipy.cluster.vq import kmeans
     print('Running kmeans for %g anchors on %g points...' % (n, len(wh)))
-    s = wh.std(0)  # sigmas for whitening
-    k, dist = kmeans(wh / s, n, iter=30)  # points, mean distance
-    k *= s
+    # s = wh.std(0)  # sigmas for whitening
+    k, dist = kmeans(wh , n, iter=30)  # points, mean distance
+    # k *= s
     wh = torch.tensor(wh, dtype=torch.float32)  # filtered
     wh0 = torch.tensor(wh0, dtype=torch.float32)  # unflitered
     k = print_results(k)
@@ -899,7 +904,8 @@ def fitness(x):
 def output_to_target(output, width, height):
     # Convert model output to target format [batch_id, class_id, x, y, w, h, conf]
     # if isinstance(output, torch.Tensor):
-    output[0] = output[0].cpu().numpy()
+    if(not output[0] is None):
+        output[0] = output[0].cpu().numpy()
 
     targets = []
     for i, o in enumerate(output):
@@ -1087,7 +1093,11 @@ def plot_gt_pre(images, targets_gt,targets_pre ,paths=None, fname='images.jpg',
                 #     # label = '%s' % cls if gt else '%s %.1f' % (cls, conf[j])
                 # 设置0.3为框的阈值
                 if (conf[j] > 0.3):
-                    label = str(np.around(conf[j],decimals=2))+'-'+str(np.around(dists[j],decimals=2))
+                    if(isinstance(conf[j],torch.Tensor)):
+                        conf1=conf[j].cpu().numpy()
+                    else:
+                        conf1 = conf[j]
+                    label = str(np.around(conf1,decimals=2))+'-'+str(np.around(dists[j],decimals=2))
                     plot_one_box(box, mosaic, label=label, color=color, line_thickness=tl)
                 # # 如果是预测值
 

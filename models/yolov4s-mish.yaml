@@ -1,13 +1,17 @@
 # parameters
-nc: 80  # number of classes
+nc: 1  # number of classes
 depth_multiple: 0.33  # model depth multiple
 width_multiple: 0.50  # layer channel multiple
 
-# anchors
+## anchors
 anchors:
   - [12,16, 19,36, 40,28]  # P3/8
   - [36,75, 76,55, 72,146]  # P4/16
   - [142,110, 192,243, 459,401]  # P5/32
+#anchors:
+#  - [12,40,  20,39,  25,40]  # P3/8
+#  - [30,40,  34,39,  40,40]  # P4/16
+#  - [142,110, 192,243, 459,401]  # P5/32
 
 # yolov4s backbone
 backbone:

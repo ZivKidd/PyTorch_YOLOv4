@@ -7,6 +7,31 @@
           <mappings>
             <mapping deploy="/media/sever/data1/xzr/PyTorch_YOLOv4" local="$PROJECT_DIR$" />
           </mappings>
+          <excludedPaths>
+            <excludedPath path="/media/sever/data1/xzr/PyTorch_YOLOv4/runs" />
+            <excludedPath path="/media/sever/data1/xzr/PyTorch_YOLOv4/test_result" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+      <paths name="sever@100.64.205.28:22 password (1)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="sever@100.64.205.28:22 password (2)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="sever@100.64.205.28:22 password (3)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
         </serverdata>
       </paths>
     </serverData>

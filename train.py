@@ -183,7 +183,7 @@ def train(hyp, tb_writer, opt, device):
     # Trainloader
     # 创建对数据集的读取器
     dataloader, dataset = create_dataloader(train_path, imgsz, batch_size, gs, opt, hyp=hyp, augment=False,
-                                            cache=opt.cache_images, rect=opt.rect, local_rank=rank,
+                                            cache=opt.cache_images, rect=False, local_rank=rank,
                                             world_size=opt.world_size)
     mlc = np.concatenate(dataset.labels, 0)[:, 0].max()  # max label class
     nb = len(dataloader)  # number of batches
@@ -193,7 +193,7 @@ def train(hyp, tb_writer, opt, device):
     if rank in [-1, 0]:
         # local_rank is set to -1. Because only the first process is expected to do evaluation.
         testloader = create_dataloader(test_path, imgsz_test, total_batch_size, gs, opt, hyp=hyp, augment=False,
-                                       cache=opt.cache_images, rect=True, local_rank=-1, world_size=opt.world_size)[0]
+                                       cache=opt.cache_images, rect=False, local_rank=-1, world_size=opt.world_size)[0]
 
     # Model parameters
     hyp['cls'] *= nc / 80.  # scale coco-tuned hyp['cls'] to current dataset
@@ -214,6 +214,7 @@ def train(hyp, tb_writer, opt, device):
             tb_writer.add_histogram('classes', c, 0)
 
         # Check anchors
+        # 在这里检查anchor是否合适
         if not opt.noautoanchor:
             check_anchors(dataset, model=model, thr=hyp['anchor_t'], imgsz=imgsz)
 
@@ -337,40 +338,42 @@ def train(hyp, tb_writer, opt, device):
                 ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'gr', 'names', 'stride'])
             final_epoch = epoch + 1 == epochs
             if not opt.notest or final_epoch:  # Calculate mAP
-                try:
-                    # 对val集进行测试
-                    results, maps, times = test.test(opt.data,
-                                                     batch_size=total_batch_size,
-                                                     imgsz=imgsz_test,
-                                                     save_json=final_epoch and opt.data.endswith(os.sep + 'coco.yaml'),
-                                                     model=ema.ema.module if hasattr(ema.ema, 'module') else ema.ema,
-                                                     single_cls=opt.single_cls,
-                                                     dataloader=testloader,
-                                                     save_dir=log_dir,
-                                                     # conf_thres=0.1,
-                                                     # iou_thres=0.8,  # for NMS
-                                                     # save_txt=True,
-                                                     )
-                    # Write
-                    with open(results_file, 'a') as f:
-                        f.write(s + '%10.4g' * 7 % results + '\n')  # P, R, mAP, F1, test_losses=(GIoU, obj, cls)
-                    if len(opt.name) and opt.bucket:
-                        os.system('gsutil cp %s gs://%s/results/results%s.txt' % (results_file, opt.bucket, opt.name))
+                # try:
+                # 对val集进行测试
+                results, maps, times = test.test(opt.data,
+                                                 batch_size=total_batch_size,
+                                                 imgsz=imgsz_test,
+                                                 save_json=final_epoch and opt.data.endswith(os.sep + 'coco.yaml'),
+                                                 model=ema.ema.module if hasattr(ema.ema, 'module') else ema.ema,
+                                                 single_cls=opt.single_cls,
+                                                 dataloader=testloader,
+                                                 save_dir=log_dir,
+                                                 # conf_thres=0.1,
+                                                 # iou_thres=0.8,  # for NMS
+                                                 # save_txt=True,
+                                                 )
+                if(not os.path.exists(os.path.join(log_dir,'test_result'))):
+                    os.mkdir(os.path.join(log_dir,'test_result'))
+                # Write
+                with open(results_file, 'a') as f:
+                    f.write(s + '%10.4g' * 7 % results + '\n')  # P, R, mAP, F1, test_losses=(GIoU, obj, cls)
+                if len(opt.name) and opt.bucket:
+                    os.system('gsutil cp %s gs://%s/results/results%s.txt' % (results_file, opt.bucket, opt.name))
 
-                    # Tensorboard
-                    if tb_writer:
-                        tags = ['train/giou_loss', 'train/obj_loss', 'train/cls_loss',
-                                'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/mAP_0.5:0.95',
-                                'val/giou_loss', 'val/obj_loss', 'val/cls_loss']
-                        for x, tag in zip(list(mloss[:-1]) + list(results), tags):
-                            tb_writer.add_scalar(tag, x, epoch)
+                # Tensorboard
+                if tb_writer:
+                    tags = ['train/giou_loss', 'train/obj_loss', 'train/cls_loss',
+                            'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/mAP_0.5:0.95',
+                            'val/giou_loss', 'val/obj_loss', 'val/cls_loss']
+                    for x, tag in zip(list(mloss[:-1]) + list(results), tags):
+                        tb_writer.add_scalar(tag, x, epoch)
 
-                    # Update best mAP
-                    fi = fitness(np.array(results).reshape(1, -1))  # fitness_i = weighted combination of [P, R, mAP, F1]
-                    if fi > best_fitness:
-                        best_fitness = fi
-                except:
-                    pass
+                # Update best mAP
+                fi = fitness(np.array(results).reshape(1, -1))  # fitness_i = weighted combination of [P, R, mAP, F1]
+                if fi > best_fitness:
+                    best_fitness = fi
+                # except:
+                #     pass
 
             with open(results_file, 'a') as f:
                 f.write('')
@@ -416,11 +419,11 @@ def train(hyp, tb_writer, opt, device):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', type=str, default='models/yolov4s-mish.yaml', help='model.yaml path')
-    parser.add_argument('--data', type=str, default='data/coco128.yaml', help='data.yaml path')
+    parser.add_argument('--data', type=str, default='data/coco128_new_depth.yaml', help='data.yaml path')
     parser.add_argument('--hyp', type=str, default='', help='hyp.yaml path (optional)')
     parser.add_argument('--epochs', type=int, default=300)
     parser.add_argument('--batch-size', type=int, default=3, help="Total batch size for all gpus.")
-    parser.add_argument('--img-size', nargs='+', type=int, default=[2000, 2000], help='train,test sizes')
+    parser.add_argument('--img-size', nargs='+', type=int, default=[2016, 2016], help='train,test sizes')
     parser.add_argument('--rect', action='store_true', help='rectangular training')
     parser.add_argument('--resume', nargs='?', const='get_last', default=False,
                         help='resume from given path/to/last.pt, or most recent run if blank.')
@@ -431,8 +434,8 @@ if __name__ == '__main__':
     parser.add_argument('--bucket', type=str, default='', help='gsutil bucket')
     parser.add_argument('--cache-images', action='store_true', help='cache images for faster training')
     parser.add_argument('--weights', type=str,
-                        default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp144/weights/last.pt',
-                        # default='',
+                        # default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp171/weights/last.pt',
+                        default='',
                         help='initial weights path')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
     parser.add_argument('--device', default='0,1,2', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')

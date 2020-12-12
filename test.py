@@ -65,7 +65,7 @@ def test(data,
         _ = model(img.half() if half else img) if device.type != 'cpu' else None  # run once
         path = data['test'] if opt.task == 'test' else data['val']  # path to val/test images
         dataloader = create_dataloader(path, imgsz, batch_size, model.stride.max(), opt,
-                                       hyp=None, augment=False, cache=False, pad=0.5, rect=True)[0]
+                                       hyp=None, augment=False, cache=False, pad=0.5, rect=False)[0]
 
     seen = 0
     names = model.names if hasattr(model, 'names') else model.module.names
@@ -87,6 +87,8 @@ def test(data,
             # Run model
             t = torch_utils.time_synchronized()
             inf_out, train_out = model(img, augment=augment)  # inference and training outputs
+            img2=img.cpu().numpy()
+            inf_out1=inf_out.cpu().numpy()
             t0 += torch_utils.time_synchronized() - t
 
             # Compute loss
@@ -95,9 +97,9 @@ def test(data,
 
             # Run NMS
             t = torch_utils.time_synchronized()
-            inf_out1=inf_out.cpu().numpy()
+            # inf_out1=inf_out.cpu().numpy()
             output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=iou_thres, merge=merge)
-            output1=output[0].cpu().numpy()
+            # output1=output[0].cpu().numpy()
             t1 += torch_utils.time_synchronized() - t
 
         # Statistics per image
@@ -238,11 +240,11 @@ def test(data,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='test.py')
     parser.add_argument('--weights', nargs='+', type=str,
-                        default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp148/weights/last.pt',
+                        default='/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp154/weights/best.pt',
                         help='model.pt path(s)')
-    parser.add_argument('--data', type=str, default='data/coco128test.yaml', help='*.data path')
+    parser.add_argument('--data', type=str, default='data/coco128test1.yaml', help='*.data path')
     parser.add_argument('--batch-size', type=int, default=1, help='size of each image batch')
-    parser.add_argument('--img-size', type=int, default=2000, help='inference size (pixels)')
+    parser.add_argument('--img-size', type=int, default=2016, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.65, help='IOU threshold for NMS')
     parser.add_argument('--save-json',default=True, action='store_true', help='save a cocoapi-compatible JSON results file')
