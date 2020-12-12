@@ -70,7 +70,7 @@ def tag2txt(tag, shape, scale, bbox_size=200):
 # pngs = glob.glob(folder)
 # pngs.sort()
 # num=0
-tags=glob.glob(r"Z:\subway_scan\guangzhou\synthesis\*.tag")
+tags=glob.glob(r"/media/sever/zeran/subway_scan/guangzhou/synthesis_intensity_processed/*.tag")
 # scale = 4
 for tag in tqdm.tqdm(tags):
     png = os.path.join(os.path.split(tag)[0], os.path.split(tag)[1][:-4] + '.png')
