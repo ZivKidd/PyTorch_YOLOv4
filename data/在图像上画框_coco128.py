@@ -4,7 +4,7 @@ import os
 import numpy as np
 import cv2
 import tqdm
-png=r"Z:\subway_scan\positive1130\augmentation\000001_0.5.png"
+png=r"Z:\subway_scan\positive1130\augmentation_seam\val\000070_1.5.png"
 coco=png[:-4]+'.txt'
 coco=np.loadtxt(coco).tolist()
 # bbox_size = 200
