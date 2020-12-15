@@ -43,7 +43,7 @@ def tag2txt_seam(tag, shape, scale, bbox_size=100):
         col = col / (shape[1] * scale)
 
         # class x_center y_center width height
-        coco128.append([0, col, 0.5, 0.015, 0.7])
+        coco128.append([0, col, 0.5, 0.015, 0.9])
 
     if (len(coco128) < 1):
         print(tag)
@@ -59,8 +59,8 @@ def tag2txt_seam(tag, shape, scale, bbox_size=100):
     return coco128
 
 scale_ori=4
-folder = r"Z:\subway_scan\positive1130\synthesis\*.png"
-folder_new = r"Z:\subway_scan\positive1130\augmentation_seam"
+folder = r"/media/sever/zeran/subway_scan/positive1130/synthesis_norail/*.png"
+folder_new = r"/media/sever/zeran/subway_scan/positive1130/augmentation_seam_norail"
 train_folder=os.path.join(folder_new,'train')
 val_folder=os.path.join(folder_new,'val')
 test_folder=os.path.join(folder_new,'test')
@@ -81,7 +81,7 @@ for png in tqdm.tqdm(pngs):
     if (coco128 is None):
         continue
     scale1 = np.around(np.around((np.random.rand(1, 1))[0, 0], decimals=2)+0.2,decimals=2)
-    scale_list=[0.5, 0.75, 1, 1.5,scale1]
+    scale_list=[0.25,0.5, 0.75, 1,1.25, 1.5,2]
     random.shuffle(scale_list)
     for scale in scale_list:
         num+=1
@@ -104,6 +104,8 @@ for png in tqdm.tqdm(pngs):
             coco1281 = copy.deepcopy(coco128)
             # coco1281[:,1]*=scale
             coco1281[:, 3] /= scale
+
+        coco1281[:,0]=int(scale/0.25-1)
 
         fmt = '%d', '%6f', '%6f', '%6f', '%6f'
         np.savetxt(tag_path_new, coco1281, fmt=fmt)
