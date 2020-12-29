@@ -10,14 +10,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import csv
 import dask.dataframe as dd
+import os
 
-files = glob.glob(r"D:\TLSD\data\*\scan\*\*reflection.csv")
+skip_if_png_exists=True
+files = glob.glob(r"Z:\subway_scan\origin_data\*\scan\*\*reflection.csv")
 files.sort()
 # reflection_files = glob.glob(r"D:\TLSD\data\*\scan\*\*reflection.csv")
 # random.shuffle(distance_files)
 # random.shuffle(reflection_files)
 for f in tqdm.tqdm(files):
-    # f=r"D:\TLSD\data\1-6号线西安国际医学中心-仁村站区间右线（013+800）\scan\scan_preview_0029\scan_preview_0029_reflection.csv"
+    f=r"Z:\subway_scan\origin_data\9-郑州1号线会展中心-黄河南路1（下行，第1趟）\scan\scan_preview_0000\scan_preview_0000_reflection.csv"
     print(f)
     # print(datetime.datetime.now())
     try:
@@ -40,12 +42,17 @@ for f in tqdm.tqdm(files):
     # dist_min=0.8
     # dist_max=4.5
     if ('reflection' in f):
+        if(os.path.exists(f[:-4] + '.png') and skip_if_png_exists):
+            continue
         if ('西安' in f):
             dist_min = 10000
             dist_max = 500000
-        else:
+        elif ('广州' in f):
             dist_min = 10000
             dist_max = 1000000
+        elif ('郑州' in f):
+            dist_min = 10000
+            dist_max = 700000
 
         # data = data[np.where(data > 0)]
         # data = data[np.where(data < 20)]
@@ -63,8 +70,8 @@ for f in tqdm.tqdm(files):
         data[np.where(data < 0)] = 0
         data = data.astype(np.uint8)
 
-        # plt.hist(data.reshape([-1]), bins=20, color='red', histtype='stepfilled', alpha=0.75)
-        # plt.show()
+        plt.hist(data.reshape([-1]), bins=20, color='red', histtype='stepfilled', alpha=0.75)
+        plt.show()
         # dst=0
         # data = cv2.equalizeHist(data)
 
@@ -75,6 +82,10 @@ for f in tqdm.tqdm(files):
         # dist_min = 0.5
         # dist_max = 5.5
         for axis_inx in [0,1]:
+
+            if (os.path.exists(f[:-4] + str(axis_inx)+'.png') and skip_if_png_exists):
+                continue
+
             dist_max = 0.3
 
 
