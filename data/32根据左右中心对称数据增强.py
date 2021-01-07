@@ -22,6 +22,8 @@ for i,tiff in enumerate(tqdm.tqdm(tiffs)):
     tiff1 = cv2.imdecode(np.fromfile(tiff, dtype=np.uint8), -1)
 
     data=np.loadtxt(txt)
+    if(data.size==5):
+        data=data.reshape([-1,5])
     data[:,0]=1
     data[:,1]*=-1
     data[:,1]+=1

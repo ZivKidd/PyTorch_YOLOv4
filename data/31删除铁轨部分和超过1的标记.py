@@ -13,6 +13,8 @@ rail_top = 0.13
 rail_down = 0.87
 
 for i, tiff in enumerate(tqdm.tqdm(tiffs)):
+    if(i<181):
+        continue
     txt = os.path.splitext(tiff)[0] + '.txt'
     txt_new = os.path.join(folder_new, os.path.split(txt)[1])
     tiff_new = os.path.join(folder_new, os.path.split(tiff)[1])
@@ -20,6 +22,8 @@ for i, tiff in enumerate(tqdm.tqdm(tiffs)):
     tiff1 = cv2.imdecode(np.fromfile(tiff, dtype=np.uint8), -1)
 
     data = np.loadtxt(txt)
+    if(data.size==5):
+        data=data.reshape([-1,5])
 
     data[:, 2] *= tiff1.shape[0]
     data[:, 4] *= tiff1.shape[0]
