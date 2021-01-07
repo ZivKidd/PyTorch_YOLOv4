@@ -56,15 +56,15 @@ def computeSymmetry(image_rect):
     diff=np.sum(np.abs(image_rect_down-image_rect_top))/image_rect.size
     return diff
 
-folder_new=r"E:\广州数据新\楔形块标记_优化"
+folder_new=r"G:\广州数据新\楔形块标记_优化"
 # 找到tag文件
 tags=[]
 # tags.extend(glob.glob(r"E:\广州数据新\*\*\*.tag"))
 # tags.extend(glob.glob(r"E:\广州数据新\*\*\*\*.tag"))
-tags.extend(glob.glob(r"E:\广州数据新\*\*\scan\*\*.tag"))
-tags.extend(glob.glob(r"E:\广州数据新\*\*\*\scan\*\*.tag"))
-tags.extend(glob.glob(r"E:\广州数据新\*\*\*\*\scan\*\*.tag"))
-tags.extend(glob.glob(r"E:\广州数据新\*\*\*\*\*\scan\*\*.tag"))
+tags.extend(glob.glob(r"G:\广州数据新\*\*\scan\*\*.tag"))
+tags.extend(glob.glob(r"G:\广州数据新\*\*\*\scan\*\*.tag"))
+tags.extend(glob.glob(r"G:\广州数据新\*\*\*\*\scan\*\*.tag"))
+tags.extend(glob.glob(r"G:\广州数据新\*\*\*\*\*\scan\*\*.tag"))
 # tags.extend(glob.glob(r"E:\广州数据新\*\*\*\*\*\*\*\*\*.tag"))
 # random.shuffle(tags)
 tags.sort()
