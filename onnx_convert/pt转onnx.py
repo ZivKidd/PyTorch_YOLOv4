@@ -1,9 +1,9 @@
 import torch
 device = torch.device("cpu")
 
-model = torch.load(r'/media/sever/data1/xzr/PyTorch_YOLOv4/runs/exp182_newdepth_yasuo/weights/best.pt') # pytorch模型加载
+model = torch.load(r"C:\Users\xuzeran\PycharmProjects\PyTorch_YOLOv4\runs\exp55\weights\best.pt") # pytorch模型加载
 batch_size = 1  #批处理大小
-input_shape = (3, 2016, 2016)   #输入数据,改成自己的输入shape
+input_shape = (3, 1920, 1920)   #输入数据,改成自己的输入shape
 model=model['model']
 model=model.to(device)
 # #set the model to inference mode
@@ -13,7 +13,7 @@ x = torch.randn(batch_size, *input_shape,device='cpu')   # 生成张量
 # x = x.to(device).cuda()
 y = model(x,augment=False)  # dry run
 
-export_onnx_file = "test.onnx"		# 目的ONNX文件名
+export_onnx_file = r"C:\Users\xuzeran\PycharmProjects\PyTorch_YOLOv4\runs\exp55\weights\best1.onnx"	# 目的ONNX文件名
 torch.onnx.export(model,
                     x,
                     export_onnx_file,

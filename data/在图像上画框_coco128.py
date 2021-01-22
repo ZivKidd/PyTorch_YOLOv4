@@ -4,7 +4,7 @@ import os
 import numpy as np
 import cv2
 import tqdm
-png=r"Z:\subway_scan\guangzhou_xian\synthesis_norail\000007.png"
+png=r"D:\xuzeran\subway\norail\test_small\001258_mirror.png"
 coco=png[:-4]+'.txt'
 coco=np.loadtxt(coco).tolist()
 # bbox_size = 200
