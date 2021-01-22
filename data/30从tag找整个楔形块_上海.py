@@ -56,23 +56,23 @@ def computeSymmetry(image_rect):
     diff=np.sum(np.abs(image_rect_down-image_rect_top))/image_rect.size
     return diff
 
-folder_new=r"G:\广州数据新\楔形块标记_优化"
+folder_new=r"E:\result_shanghai"
 # 找到tag文件
 tags=[]
-# tags.extend(glob.glob(r"E:\广州数据新\*\*\*.tag"))
-# tags.extend(glob.glob(r"E:\广州数据新\*\*\*\*.tag"))
-tags.extend(glob.glob(r"G:\广州数据新\*\*\scan\*\*.tag"))
-tags.extend(glob.glob(r"G:\广州数据新\*\*\*\scan\*\*.tag"))
-tags.extend(glob.glob(r"G:\广州数据新\*\*\*\*\scan\*\*.tag"))
-tags.extend(glob.glob(r"G:\广州数据新\*\*\*\*\*\scan\*\*.tag"))
-# tags.extend(glob.glob(r"E:\广州数据新\*\*\*\*\*\*\*\*\*.tag"))
-# random.shuffle(tags)
+
+tags.extend(glob.glob(r"F:\上海地铁\*\*\scan\*\*.tag"))
+tags.extend(glob.glob(r"F:\上海地铁\*\*\*\scan\*\*.tag"))
+tags.extend(glob.glob(r"F:\上海地铁\*\*\*\*\scan\*\*.tag"))
+tags.extend(glob.glob(r"F:\上海地铁\*\*\*\*\*\scan\*\*.tag"))
+tags.extend(glob.glob(r"F:\上海地铁\*\*\*\*\*\*\scan\*\*.tag"))
+
 tags.sort()
+# print(len(tags))
 good_num=0
 for ind,tag in enumerate(tqdm.tqdm(tags)):
     # if(ind<1231):
     #     continue
-    print(tag)
+    # print(tag)
     # tag=r"E:\广州数据新\广州8号线北延\逐环标记\广州8号线北延11-5\5-8号线北延鹅掌坦-同德下行\scan\scan_preview_0007\scan_preview_0007.tag"
 
     # 根据文件判断短边在左还是右

@@ -75,7 +75,9 @@ for tiff in tqdm.tqdm(tiffs):
     img = img[int(img.shape[0] * 0.15):int(img.shape[0] * 0.85), :]
     # img_ori=copy.deepcopy(img)
     img = cv2.equalizeHist(img)
-    img = filters.median(img,disk(3))
+    img = filters.median(img,disk(3))\
+
+    # cv2.imencode('.png', img)[1].tofile(tiff[:-5]+'.png')
 
     # img = filters.roberts_neg_diag(img)
     # img=img/np.max(img)*255
@@ -117,7 +119,7 @@ for tiff in tqdm.tqdm(tiffs):
     # plt.plot(x1, y1, 'r--', label='type1')
     # plt.plot(x1, meta, 'b--', label='type1')
     # plt.plot(x2, y2, 'r--', label='type1')
-    # # plt.plot(x1, y1, 'bo')
+    # plt.plot(x1, y1, 'bo')
     # plt.show()
 
-    cv2.imencode('.png', output)[1].tofile(tiff[:-5]+'.png')
+    cv2.imencode('.png', img)[1].tofile(tiff[:-5]+'.png')

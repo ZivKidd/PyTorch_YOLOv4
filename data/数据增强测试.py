@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import tqdm
 
-folder = r"D:\xuzeran\subway\norail\*\*.png"
+folder = r"E:\norail\*.png"
 # folder_new = r"E:\广州数据新\norail\train_more"
 tiffs = glob.glob(folder)
 tiffs.sort()

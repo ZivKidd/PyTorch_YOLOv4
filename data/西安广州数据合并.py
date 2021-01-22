@@ -59,10 +59,10 @@ def tag2txt(tag, shape, scale, bbox_size=100):
 
 
 # folder = r'/media/sever/zeran/subway_scan/positive1130/origin/*.tiff'
-folder_new=r"Z:\subway_scan\guangzhou_xian\synthesis_norail"
+folder_new=r"/media/sever/zeran/subway_scan/guangzhou_xian/synthesis_norail"
 tiffs =[]
-tiffs.extend(glob.glob(r"Z:\subway_scan\positive1130\origin\*.tiff")[:700])
-tiffs.extend(glob.glob(r"Z:\subway_scan\guangzhou\origin\*.tiff")[:700])
+tiffs.extend(glob.glob(r"/media/sever/zeran/subway_scan/guangzhou/origin/*.tiff")[:700])
+tiffs.extend(glob.glob(r"/media/sever/zeran/subway_scan/positive1130/origin/*.tiff")[:700])
 random.shuffle(tiffs)
 scale=3
 for i,tiff in enumerate(tqdm.tqdm(tiffs)):
@@ -112,6 +112,10 @@ for i,tiff in enumerate(tqdm.tqdm(tiffs)):
     coco128[:,3]/=output.shape[1]
     coco128[:,2]/=output.shape[0]
     coco128[:,4]/=output.shape[0]
+
+    # coco128[0,2]=-1
+    coco128=coco128[np.logical_and(coco128[:,2]>0,coco128[:,2]<1)]
+
 
     # tiff1=cv2.resize(tiff1, (int(tiff1.shape[1] / scale), int(tiff1.shape[0] / scale)), interpolation=cv2.INTER_AREA)
     # cv2.imwrite('1.png', tiff1)

@@ -13,13 +13,13 @@ import dask.dataframe as dd
 import os
 
 skip_if_png_exists=True
-files = glob.glob(r"Z:\subway_scan\origin_data\*\scan\*\*reflection.csv")
+files = glob.glob(r"D:\TLSD\data\*\scan\*\*distance.csv")
 files.sort()
 # reflection_files = glob.glob(r"D:\TLSD\data\*\scan\*\*reflection.csv")
 # random.shuffle(distance_files)
 # random.shuffle(reflection_files)
 for f in tqdm.tqdm(files):
-    f=r"Z:\subway_scan\origin_data\9-郑州1号线会展中心-黄河南路1（下行，第1趟）\scan\scan_preview_0000\scan_preview_0000_reflection.csv"
+    # f=r"Z:\subway_scan\origin_data\9-郑州1号线会展中心-黄河南路1（下行，第1趟）\scan\scan_preview_0000\scan_preview_0000_reflection.csv"
     print(f)
     # print(datetime.datetime.now())
     try:

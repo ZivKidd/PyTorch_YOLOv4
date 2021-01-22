@@ -122,7 +122,7 @@ if __name__ == '__main__':
     # print(img_path)
     # print(sys.argv)
     # onnx_model = ONNXModel(os.path.join(os.path.split(sys.argv[0])[0],'test.onnx'))
-    onnx_model = ONNXModel(r'D:\desktop\files\shine\地铁环缝检测\onnx测试\test.onnx')
+    onnx_model = ONNXModel(r"D:\desktop\files\shine\地铁环缝检测\onnx测试\test.zz")
     # 防止不能读入中文路径的图片
     intensity_img = cv2.imdecode(np.fromfile(intensity_img_path, dtype=np.uint8), -1)
     depth_img = cv2.imdecode(np.fromfile(depth_img_path, dtype=np.uint8), -1)

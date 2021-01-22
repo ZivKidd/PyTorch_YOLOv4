@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 
 
-folder = r"G:\广州数据新\norail\*.png"
+folder = r"E:\norail\*.png"
 # folder_new=r"D:\xuzeran\subway\xiexingkuai_kuang\test_norail"
 tiffs = glob.glob(folder)
 tiffs.sort()
@@ -24,7 +24,9 @@ for i,tiff in enumerate(tqdm.tqdm(tiffs)):
     data=np.loadtxt(txt)
     if(data.size==5):
         data=data.reshape([-1,5])
-    data[:,0]=1
+    data1=data[np.where(data[:,0]==0)]
+    data1[:,0]=1
+    data[np.where(data[:, 0] == 0)]=data1
     data[:,1]*=-1
     data[:,1]+=1
 
@@ -33,6 +35,7 @@ for i,tiff in enumerate(tqdm.tqdm(tiffs)):
 
     tiff_clip=np.flip(tiff1,axis=1)
     cv2.imencode('.png', tiff_clip)[1].tofile(tiff_new)
+    # break
 
 
 
