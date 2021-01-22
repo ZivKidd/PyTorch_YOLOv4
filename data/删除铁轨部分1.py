@@ -6,16 +6,16 @@ import numpy as np
 import cv2
 
 
-folder = r"D:\xuzeran\subway\xiexingkuai_kuang\test\*.png"
-folder_new=r"D:\xuzeran\subway\xiexingkuai_kuang\test_norail"
+folder = r"D:\xuzeran\subway\xiexingkuai_kuang\train\*.png"
+folder_new=r"D:\xuzeran\subway\xiexingkuai_kuang\train_norail"
 tiffs = glob.glob(folder)
 tiffs.sort()
 rail_top=0.13
 rail_down=0.87
 # scale=1
 for i,tiff in enumerate(tqdm.tqdm(tiffs)):
-    if(i<137):
-        continue
+    # if(i<137):
+    #     continue
     txt = os.path.splitext(tiff)[0]+ '.txt'
     txt_new=os.path.join(folder_new,os.path.split(txt)[1])
     tiff_new=os.path.join(folder_new,os.path.split(tiff)[1])
