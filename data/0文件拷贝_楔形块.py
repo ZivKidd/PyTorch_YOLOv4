@@ -8,10 +8,10 @@ import numpy as np
 wedge_txts=[]
 # wedge_txts.extend(glob.glob(r"E:\广州数据新\*\*\*_wedge.txt"))
 # wedge_txts.extend(glob.glob(r"E:\广州数据新\*\*\*\*_wedge.txt"))
-wedge_txts.extend(glob.glob(r"E:\广州数据新\*\*\*\*\*_wedge.txt"))
-wedge_txts.extend(glob.glob(r"E:\广州数据新\*\*\*\*\*\*_wedge.txt"))
-wedge_txts.extend(glob.glob(r"E:\广州数据新\*\*\*\*\*\*\*_wedge.txt"))
-wedge_txts.extend(glob.glob(r"E:\广州数据新\*\*\*\*\*\*\*\*_wedge.txt"))
+wedge_txts.extend(glob.glob(r"G:\广州数据新\*\*\*\*\*_wedge.txt"))
+wedge_txts.extend(glob.glob(r"G:\广州数据新\*\*\*\*\*\*_wedge.txt"))
+wedge_txts.extend(glob.glob(r"G:\广州数据新\*\*\*\*\*\*\*_wedge.txt"))
+wedge_txts.extend(glob.glob(r"G:\广州数据新\*\*\*\*\*\*\*\*_wedge.txt"))
 # wedge_txts.extend(glob.glob(r"E:\广州数据新\*\*\*\*\*\*\*\*\*_wedge.txt"))
 # random.shuffle(tags)
 
