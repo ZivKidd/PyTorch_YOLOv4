@@ -42,61 +42,38 @@ def tag2txt(tag):
     coco128 = coco128[coco128[:, 0].argsort()]
     return coco128
 
-
-# 计算图像横向的对称性
-def computeSymmetry(image_rect):
-    image_rect_top = image_rect[:int(image_rect.shape[0] / 2), :]
-    image_rect_down = image_rect[int(image_rect.shape[0] / 2):, :]
-    image_rect_down = np.flip(image_rect_down, axis=0)
-
-    cv2.imshow('top', image_rect_top)
-    cv2.imshow('down', image_rect_down)
-    cv2.waitKey(0)
-
-    if (image_rect_down.shape[0] > image_rect_top.shape[0]):
-        image_rect_down = image_rect_down[:-1, :]
-    diff = np.sum(np.abs(image_rect_down - image_rect_top)) / image_rect.size
-    return diff
-
-
-folder_new = r"D:\coco128"
+# folder_new = r"D:\coco128"
 # 找到tag文件
 tags = []
-tags.extend(glob.glob(r"G:\*\*\*\*.tag"))
-tags.extend(glob.glob(r"G:\*\*\*\*\*.tag"))
-tags.extend(glob.glob(r"G:\*\*\*\scan\*\*.tag"))
-tags.extend(glob.glob(r"G:\*\*\*\*\scan\*\*.tag"))
-tags.extend(glob.glob(r"G:\*\*\*\*\*\scan\*\*.tag"))
-tags.extend(glob.glob(r"G:\*\*\*\*\*\*\scan\*\*.tag"))
-# tags.extend(glob.glob(r"F:\广州数据新\*\*\*\*\*\*\scan\*\*.tag"))
-# tags.extend(glob.glob(r"F:\广州数据新\*\*\*\*\*\*\*\scan\*\*.tag"))
-# tags.extend(glob.glob(r"F:\广州数据新\*\*\*\*\*\*\*\*\scan\*\*.tag"))
-random.shuffle(tags)
-# tags.sort()
+tags.extend(glob.glob(r"F:\origin\*.tag"))
+
+# random.shuffle(tags)
+tags.sort()
 print(len(tags))
 good_num = 0
 for ind, tag in enumerate(tqdm.tqdm(tags)):
+    # tag=r"F:\origin\000996.tag"
     # if(ind<1231):
     #     continue
     # tag=r"E:\广州数据新\广州8号线北延\逐环标记\广州8号线北延11-5\5-8号线北延鹅掌坦-同德下行\scan\scan_preview_0007\scan_preview_0007.tag"
 
-    # 根据文件判断短边在左还是右
-    tag_folder = os.path.split(tag)[0]
-    tag_folder = os.path.split(tag_folder)[0]
-    tag_folder = os.path.split(tag_folder)[0]
-    left_shorter = False
-    if (not os.path.exists(os.path.join(tag_folder, 'right_shorter.txt'))):
-        #     left_shorter=False
-        # if( os.path.exists(os.path.join(tag_folder,'left_shorter.txt'))):
-        continue
+    # # 根据文件判断短边在左还是右
+    # tag_folder = os.path.split(tag)[0]
+    # tag_folder = os.path.split(tag_folder)[0]
+    # tag_folder = os.path.split(tag_folder)[0]
+    # left_shorter = False
+    # if (not os.path.exists(os.path.join(tag_folder, 'right_shorter.txt'))):
+    #     #     left_shorter=False
+    #     # if( os.path.exists(os.path.join(tag_folder,'left_shorter.txt'))):
+    #     continue
 
-    # 图片的长宽
+    # # 图片的长宽
     tiff_path = os.path.join(os.path.split(tag)[0], os.path.split(tag)[1][:-4] + '.tiff')
-    jpg_path = os.path.join(os.path.split(tag)[0], os.path.split(tag)[1][:-4] + '_bolt.jpg')
-
-    if (not (os.path.exists(tiff_path) and os.path.exists(jpg_path))):
-        continue
-    print(tag)
+    jpg_path = os.path.join(os.path.split(tag)[0], os.path.split(tag)[1][:-4] + '.jpg')
+    #
+    # if (not (os.path.exists(tiff_path) and os.path.exists(jpg_path))):
+    #     continue
+    # print(tag)
 
     # tiff_shape = cv2.imdecode(np.fromfile(tiff_path, dtype=np.uint8), -1).shape
     tiff = cv2.imdecode(np.fromfile(tiff_path, dtype=np.uint8), -1)
@@ -106,7 +83,7 @@ for ind, tag in enumerate(tqdm.tqdm(tags)):
     jpg[:, :, 0] = tiff
     jpg[:, :, 2] = 0
 
-    jpg = np.flip(jpg, axis=2)
+    # jpg = np.flip(jpg, axis=2)
 
     # 读取tag文件
     coco128 = tag2txt(tag)
@@ -143,12 +120,13 @@ for ind, tag in enumerate(tqdm.tqdm(tags)):
         rect = 255 - rect
 
         rect = cv2.medianBlur(rect, 5)
-        # cv2.imshow('ori',rect)
+        cv2.imwrite('test.png',rect)
         # cv2.waitKey(0)
 
         # 按从下到上，卷积一个斜线型，找到最大的，就是下边所在
         mean_max1 = 0
         h_max = 0
+        line_max1=0
         for h1 in range(int(h * 0.1), int(h * 0.35), 3):
             x_ind = np.arange(coco128[i + 1, 0] - coco128[i, 0])
             y_ind = (h - np.round((x_ind / (coco128[i + 1, 0] - coco128[i, 0])) * h1) - 1).astype(np.int)
@@ -156,10 +134,12 @@ for ind, tag in enumerate(tqdm.tqdm(tags)):
             if (mean > mean_max1):
                 mean_max1 = mean
                 h_max = h1
+                line_max1=rect[y_ind, x_ind]
 
         # 按从上到下，卷积一个斜线型，找到最大的，就是上边所在
         mean_max2 = 0
         y_max = 0
+        line_max2=0
         # h_max=0
         for y1 in range(0, int(h * 0.3), 3):
             x_ind = np.arange(coco128[i + 1, 0] - coco128[i, 0])
@@ -168,6 +148,7 @@ for ind, tag in enumerate(tqdm.tqdm(tags)):
             if (mean > mean_max2):
                 mean_max2 = mean
                 y_max = y1
+                line_max2=rect[y_ind, x_ind]
 
         # print(y_max/h,h_max,mean_max1,mean_max2)
         # x1=coco128[i, 0]
@@ -178,8 +159,12 @@ for ind, tag in enumerate(tqdm.tqdm(tags)):
         # rect1 = jpg[y1:y2, x1:x2,:]
         # cv2.imshow('result',rect1)
         # cv2.waitKey(0)
-        if (mean_max2 < 200 and mean_max1 < 200):
+        # if (isinstance(line_max1,int) or  np.where(line_max1==0)[0].size>line_max1.size/2):
+        if (isinstance(line_max1,int)):
+            # print('bad')
             continue
+        # else:
+        #     print('good')
 
         height = h - y_max
         if (height < height_ori):
@@ -213,16 +198,18 @@ for ind, tag in enumerate(tqdm.tqdm(tags)):
 
     # shutil.copy(tiff_path,os.path.join(folder_new,str(ind).zfill(6)+'.tiff'))
     # shutil.copy(jpg_path,os.path.join(folder_new,str(ind).zfill(6)+'.jpg'))
-    np.savetxt(os.path.join(tiff_path[:-5]+'_wedge.txt'), wedge, fmt=fmt)
+    np.savetxt(tiff_path[:-5]+'_wedge.txt', wedge, fmt=fmt)
 
     # width = jpg.shape[1]
     # height = jpg.shape[0]
     # for b in wedge:
-    #     jpg = cv2.rectangle(img=tiff, pt1=(int(b[1] * width - b[3] * width / 2), int(b[2] * height - b[4] * height / 2)),
+    #     cv2.rectangle(img=tiff, pt1=(int(b[1] * width - b[3] * width / 2), int(b[2] * height - b[4] * height / 2)),
     #                         pt2=(int(b[1] * width + b[3] * width / 2), int(b[2] * height + b[4] * height / 2)),
     #                         color=(0, 0, 255),
     #                         thickness=3)
     #     # png = cv2.circle(png, (int(b[1] *width), int(b[2] *height)), 3, (0, 0, 255))
     #     # print()
     #
-    # cv2.imencode('.jpg', jpg)[1].tofile(os.path.join(folder_new, str(ind).zfill(6) + '_wedge.jpg'))
+    # cv2.imencode('.jpg', tiff)[1].tofile(tiff_path[:-5]+ '_wedge.jpg')
+    # break
+    # print()
